@@ -56,6 +56,18 @@ class SHAPErrorAnalysis:
         print("3.1 DATA LOADING")
         print("="*70)
 
+        # Load Part 1 insights
+        from insights_manager import InsightsManager
+        manager = InsightsManager()
+        part1_insights = manager.get_part1_insights()
+
+        if part1_insights:
+            print("\n✓ Using Part 1 insights to guide error analysis:")
+            imbalance_ratio = part1_insights.get('class_imbalance_ratio', 1.0)
+            print(f"  Class imbalance: {imbalance_ratio:.2f}:1 (high imbalance)")
+            print(f"  → Will prioritize ESCAPED DEFECT detection")
+            self.insights['imbalance_context'] = imbalance_ratio
+
         self.train_df = pd.read_csv(self.train_path)
         self.X_train = self.train_df.drop(['CoilID', 'Y'], axis=1)
         self.y_train = self.train_df['Y']
@@ -297,8 +309,13 @@ class SHAPErrorAnalysis:
         # FN: predicted 0, actual 1
         fn_mask = (y_pred == 0) & (self.y_train == 1)
         fn_count = fn_mask.sum()
+        fn_rate = fn_count/sum(self.y_train)*100
 
-        print(f"\nFalse Negatives: {fn_count} ({fn_count/sum(self.y_train)*100:.2f}% of defects)")
+        print(f"\nFalse Negatives (ESCAPED DEFECTS): {fn_count} ({fn_rate:.2f}% of defects)")
+        print(f"⚠️ CRITICAL: {fn_rate:.2f}% of actual defects are NOT caught by baseline model")
+
+        # Save FN rate for downstream parts
+        self.insights['fn_rate'] = fn_rate
 
         if fn_count > 0:
             fn_features = self.X_train[fn_mask]
@@ -480,11 +497,30 @@ SHAP & ERROR ANALYSIS INSIGHTS
         return self.insights
 
 if __name__ == "__main__":
+    from insights_manager import InsightsManager
+
     shap_analysis = SHAPErrorAnalysis(train_path='train.csv')
     insights = shap_analysis.run_shap_analysis()
+
+    # Save insights for downstream parts
+    manager = InsightsManager()
+
+    # Compute FN and FP rates for saving
+    y_pred = shap_analysis.model.predict(shap_analysis.X_train)
+    fn_mask = (y_pred == 0) & (shap_analysis.y_train == 1)
+    fp_mask = (y_pred == 1) & (shap_analysis.y_train == 0)
+
+    fn_rate = fn_mask.sum() / sum(shap_analysis.y_train) * 100
+    fp_rate = fp_mask.sum() / sum(shap_analysis.y_train == 0) * 100
+
+    insights['fn_rate'] = fn_rate
+    insights['fp_rate'] = fp_rate
+
+    manager.set_part3_insights(insights)
 
     print("\n" + "="*70)
     print("PART 3 COMPLETE")
     print("="*70)
-    print("\nError analysis and SHAP insights extracted.")
+    print(f"\n⚠️ CRITICAL FINDING: {fn_rate:.2f}% of defects are ESCAPED (not detected)")
+    print("✓ Insights propagated to downstream parts")
     print("Ready for Part 4: Correlation Grouping")

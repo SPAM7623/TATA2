@@ -53,7 +53,21 @@ class CalibrationThreshold:
         print("7.1 DATA LOADING")
         print("="*70)
 
-        print(f"Features: {self.X.shape}")
+        # Load insights from previous parts
+        from insights_manager import InsightsManager
+        manager = InsightsManager()
+
+        part3_insights = manager.get_part3_insights()
+
+        if part3_insights:
+            fn_rate = part3_insights.get('fn_rate', 0)
+            print(f"\n⚠️ Context from Part 3:")
+            print(f"  Baseline escaped defects (FN): {fn_rate:.2f}%")
+            print(f"  → THRESHOLD MUST achieve <5% escape rate")
+            print(f"  → Prioritize 95% RECALL threshold")
+            self.insights['fn_rate_target'] = fn_rate
+
+        print(f"\nFeatures: {self.X.shape}")
         print(f"Target: {self.y.value_counts().to_dict()}")
 
         CHECKLIST["7.1_data_loading"] = True
@@ -420,11 +434,21 @@ PROBABILITY CALIBRATION & THRESHOLD OPTIMIZATION INSIGHTS
         return self.insights
 
 if __name__ == "__main__":
+    from insights_manager import InsightsManager
+
     calib = CalibrationThreshold(engineered_path='X_engineered.csv', target_path='y_train.csv')
     insights = calib.run_calibration_threshold()
+
+    # Save insights for downstream parts
+    manager = InsightsManager()
+    manager.set_part7_insights(insights)
+
+    optimal_threshold = insights.get('optimal_thresholds', {}).get('recall_95', 0.5)
 
     print("\n" + "="*70)
     print("PART 7 COMPLETE")
     print("="*70)
-    print("\nCalibration and threshold optimization completed.")
+    print(f"\n✓ Calibration and threshold optimization completed")
+    print(f"⚠️ OPTIMAL THRESHOLD FOR PRODUCTION: {optimal_threshold:.4f}")
+    print("✓ Insights propagated to Part 8")
     print("Ready for Part 8: Final Refinement")

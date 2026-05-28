@@ -60,6 +60,17 @@ class BaselineModeling:
         print("2.1-2.2 DATA LOADING & PREPARATION")
         print("="*70)
 
+        # Load Part 1 insights
+        from insights_manager import InsightsManager
+        manager = InsightsManager()
+        part1_insights = manager.get_part1_insights()
+
+        if part1_insights:
+            print("\n✓ Using Part 1 insights:")
+            print(f"  Class imbalance ratio: {part1_insights.get('class_imbalance_ratio', 'N/A'):.2f}:1")
+            print(f"  Unstable features to monitor: {part1_insights.get('unstable_features', [])[:3]}")
+            self.insights['part1_context'] = part1_insights
+
         self.train_df = pd.read_csv(self.train_path)
         self.test_df = pd.read_csv(self.test_path)
 
@@ -438,11 +449,18 @@ BASELINE MODEL INSIGHTS
         return self.insights
 
 if __name__ == "__main__":
+    from insights_manager import InsightsManager
+
     baseline = BaselineModeling(train_path='train.csv', test_path='test.csv')
     insights = baseline.run_baseline_modeling()
+
+    # Save insights for downstream parts
+    manager = InsightsManager()
+    manager.set_part2_insights(insights)
 
     print("\n" + "="*70)
     print("PART 2 COMPLETE")
     print("="*70)
     print("\nBaseline models trained and evaluated.")
+    print("✓ Insights propagated to downstream parts")
     print("Ready for Part 3: SHAP + Error Analysis")

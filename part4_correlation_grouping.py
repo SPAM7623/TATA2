@@ -48,6 +48,21 @@ class CorrelationGrouping:
         print("4.1 DATA LOADING")
         print("="*70)
 
+        # Load previous insights
+        from insights_manager import InsightsManager
+        manager = InsightsManager()
+        part1_insights = manager.get_part1_insights()
+        part3_insights = manager.get_part3_insights()
+
+        if part1_insights:
+            print("\n✓ Context from Part 1:")
+            print(f"  Unstable features: {part1_insights.get('unstable_features', [])[:3]}")
+
+        if part3_insights:
+            print(f"\n✓ Context from Part 3:")
+            print(f"  Escaped defect rate: {part3_insights.get('fn_rate', 0):.2f}%")
+            print(f"  → Feature groups should help distinguish escaped defects")
+
         self.train_df = pd.read_csv(self.train_path)
         self.X_train = self.train_df.drop(['CoilID', 'Y'], axis=1)
         self.y_train = self.train_df['Y']
@@ -327,11 +342,19 @@ CORRELATION GROUPING & PROCESS-BLOCK DISCOVERY INSIGHTS
         return self.insights
 
 if __name__ == "__main__":
+    from insights_manager import InsightsManager
+
     grouping = CorrelationGrouping(train_path='train.csv')
     insights = grouping.run_grouping_analysis()
+
+    # Save insights for downstream parts
+    manager = InsightsManager()
+    manager.set_part4_insights(insights)
 
     print("\n" + "="*70)
     print("PART 4 COMPLETE")
     print("="*70)
     print("\nFeature groups and process blocks identified.")
+    print(f"✓ {len(grouping.feature_groups)} feature groups discovered")
+    print("✓ Insights propagated to Part 5")
     print("Ready for Part 5: Feature Engineering")

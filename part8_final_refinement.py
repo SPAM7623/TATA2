@@ -51,7 +51,20 @@ class FinalRefinement:
         print("8.1 DATA LOADING")
         print("="*70)
 
-        print(f"Features: {self.X.shape}")
+        # Load insights from all previous parts
+        from insights_manager import InsightsManager
+        manager = InsightsManager()
+
+        part7_insights = manager.get_part7_insights()
+
+        if part7_insights:
+            optimal_threshold = part7_insights.get('optimal_thresholds', {}).get('recall_95', 0.5)
+            print(f"\n✓ Context from Part 7:")
+            print(f"  Optimal deployment threshold: {optimal_threshold:.4f}")
+            print(f"  → Final model will be validated against this threshold")
+            self.insights['deployment_threshold'] = optimal_threshold
+
+        print(f"\nFeatures: {self.X.shape}")
         print(f"Target: {self.y.value_counts().to_dict()}")
 
         CHECKLIST["8.1_data_loading"] = True
@@ -480,16 +493,29 @@ FINAL MODEL REFINEMENT SUMMARY
         return self.insights
 
 if __name__ == "__main__":
+    from insights_manager import InsightsManager
+
     final = FinalRefinement(engineered_path='X_engineered.csv', target_path='y_train.csv')
     insights = final.run_final_refinement()
+
+    # Save insights for deployment
+    manager = InsightsManager()
+    manager.set_part8_insights(insights)
+
+    # Print workflow summary
+    manager.print_workflow_summary()
+    manager.export_to_json('workflow_insights.json')
 
     print("\n" + "="*70)
     print("PART 8 COMPLETE - ALL WORKFLOW STAGES FINISHED")
     print("="*70)
-    print("\nAlpha Defect Prediction Model - READY FOR DEPLOYMENT")
+    print("\n✅ Alpha Defect Prediction Model - READY FOR DEPLOYMENT")
     print("\nSummary of Outputs:")
-    print("  - 8 comprehensive Python scripts")
-    print("  - 24+ visualization plots")
-    print("  - 8 insights reports")
-    print("  - Optimized model with calibration")
-    print("  - Production-ready predictions")
+    print("  ✓ 8 comprehensive Python scripts")
+    print("  ✓ 24+ visualization plots")
+    print("  ✓ 8 insights reports")
+    print("  ✓ Optimized model with calibration")
+    print("  ✓ Production-ready predictions")
+    print("  ✓ Cross-part knowledge propagation complete")
+    print("\n✓ workflow_insights.pkl - Complete workflow state")
+    print("✓ workflow_insights.json - Deployment-ready config")

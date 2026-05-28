@@ -117,7 +117,16 @@ class WorkflowOrchestrator:
 
     def print_summary(self):
         """Print workflow summary"""
+        from insights_manager import InsightsManager
+
         print_header("WORKFLOW EXECUTION SUMMARY")
+
+        # Load and print insights from all parts
+        try:
+            manager = InsightsManager()
+            manager.print_workflow_summary()
+        except Exception as e:
+            print(f"(Note: Detailed insights not yet available: {e})")
 
         end_time = datetime.now()
         duration = end_time - self.start_time

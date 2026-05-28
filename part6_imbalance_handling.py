@@ -52,7 +52,25 @@ class ImbalanceHandling:
         print("6.1 DATA LOADING")
         print("="*70)
 
-        print(f"Engineered features: {self.X.shape}")
+        # Load insights from previous parts
+        from insights_manager import InsightsManager
+        manager = InsightsManager()
+
+        part1_insights = manager.get_part1_insights()
+        part3_insights = manager.get_part3_insights()
+
+        if part1_insights:
+            print(f"\n✓ Context from Part 1:")
+            imbalance = part1_insights.get('class_imbalance_ratio', 0)
+            print(f"  Class imbalance: {imbalance:.2f}:1")
+
+        if part3_insights:
+            fn_rate = part3_insights.get('fn_rate', 0)
+            print(f"\n✓ Context from Part 3:")
+            print(f"  Escaped defects (FN): {fn_rate:.2f}%")
+            print(f"  → PRIORITIZE RECALL in imbalance handling")
+
+        print(f"\nEngineered features: {self.X.shape}")
         print(f"Target distribution: {self.y.value_counts().to_dict()}")
         print(f"Imbalance ratio: {self.y.value_counts()[0]/self.y.value_counts()[1]:.2f}:1")
 
@@ -372,11 +390,18 @@ IMBALANCE HANDLING STRATEGY INSIGHTS
         return self.insights
 
 if __name__ == "__main__":
+    from insights_manager import InsightsManager
+
     imbalance = ImbalanceHandling(engineered_path='X_engineered.csv', target_path='y_train.csv')
     insights = imbalance.run_imbalance_handling()
+
+    # Save insights for downstream parts
+    manager = InsightsManager()
+    manager.set_part6_insights(insights)
 
     print("\n" + "="*70)
     print("PART 6 COMPLETE")
     print("="*70)
     print("\nImbalance handling strategies evaluated.")
+    print("✓ Insights propagated to downstream parts")
     print("Ready for Part 7: Calibration & Threshold Tuning")

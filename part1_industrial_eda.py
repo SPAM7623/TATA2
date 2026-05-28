@@ -813,11 +813,18 @@ KEY INSIGHTS FROM INDUSTRIAL EDA
         return self.insights
 
 if __name__ == "__main__":
+    from insights_manager import InsightsManager
+
     eda = IndustrialEDA(train_path='train.csv', test_path='test.csv')
     insights = eda.run_complete_eda()
+
+    # Save insights for downstream parts
+    manager = InsightsManager()
+    manager.set_part1_insights(insights)
 
     print("\n" + "="*70)
     print("PART 1 COMPLETE")
     print("="*70)
     print("\nKey insights extracted and saved.")
+    print("✓ Insights propagated to downstream parts")
     print("Ready for Part 2: Baseline Model Training")

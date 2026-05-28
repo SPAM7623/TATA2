@@ -51,6 +51,26 @@ class FeatureEngineering:
         print("5.1 DATA LOADING")
         print("="*70)
 
+        # Load insights from previous parts
+        from insights_manager import InsightsManager
+        manager = InsightsManager()
+
+        part3_insights = manager.get_part3_insights()
+        part4_insights = manager.get_part4_insights()
+
+        if part3_insights:
+            fn_rate = part3_insights.get('fn_rate', 0)
+            print(f"\n✓ Context from Part 3:")
+            print(f"  Escaped defects: {fn_rate:.2f}%")
+            print(f"  → Prioritize instability and anomaly features")
+
+        if part4_insights:
+            feature_groups = part4_insights.get('feature_groups', {})
+            if feature_groups:
+                self.feature_groups = feature_groups
+                print(f"\n✓ Using feature groups from Part 4:")
+                print(f"  {len(feature_groups)} groups identified")
+
         self.train_df = pd.read_csv(self.train_path)
         self.X_train = self.train_df.drop(['CoilID', 'Y'], axis=1)
         self.y_train = self.train_df['Y']
@@ -363,11 +383,19 @@ FEATURE ENGINEERING INSIGHTS
         return self.X_engineered, self.insights
 
 if __name__ == "__main__":
+    from insights_manager import InsightsManager
+
     fe = FeatureEngineering(train_path='train.csv')
     X_eng, insights = fe.run_feature_engineering()
+
+    # Save insights for downstream parts
+    manager = InsightsManager()
+    insights['total_engineered_features'] = X_eng.shape[1]
+    manager.set_part5_insights(insights)
 
     print("\n" + "="*70)
     print("PART 5 COMPLETE")
     print("="*70)
     print(f"\nEngineered features created: {X_eng.shape[1]} total features")
+    print("✓ Insights propagated to downstream parts")
     print("Ready for Part 6: Imbalance Handling")
