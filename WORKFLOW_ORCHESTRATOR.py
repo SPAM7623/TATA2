@@ -222,6 +222,110 @@ Model Artifacts:
 
         print_header("WORKFLOW COMPLETE - READY FOR PRODUCTION DEPLOYMENT")
 
+    def generate_test_predictions(self):
+        """Generate predictions on test data and save as CSV"""
+        print_header("GENERATING TEST PREDICTIONS")
+
+        try:
+            import pandas as pd
+            import pickle
+            import numpy as np
+            from xgboost import XGBClassifier
+
+            # Load test data
+            print("\nLoading test data...")
+            test_df = pd.read_csv('test.csv')
+            coil_ids = test_df['CoilID'].values
+
+            # Load engineered features for test
+            print("Loading engineered features for test data...")
+            try:
+                # Try to load engineered test features if available
+                X_test = pd.read_csv('X_engineered_test.csv').drop('CoilID', axis=1, errors='ignore')
+            except FileNotFoundError:
+                # Fall back to raw features
+                feature_cols = [col for col in test_df.columns if col.startswith('X')]
+                X_test = test_df[feature_cols].copy()
+
+            print(f"Test data shape: {X_test.shape}")
+
+            # Load the final model from Part 8
+            print("\nLoading final model...")
+            from insights_manager import InsightsManager
+            manager = InsightsManager()
+            insights = manager.get_part8_insights()
+
+            if insights and 'optimal_threshold' in insights:
+                threshold = insights['optimal_threshold']
+                print(f"Using optimal threshold: {threshold:.4f}")
+            else:
+                threshold = 0.28  # Default
+                print(f"Using default threshold: {threshold:.4f}")
+
+            # Train final model on full dataset (using simplified approach)
+            print("\nTraining final model on full data for predictions...")
+            train_df = pd.read_csv('train.csv')
+
+            # Get engineered features if available
+            try:
+                X_train = pd.read_csv('X_engineered.csv').drop('CoilID', axis=1, errors='ignore')
+            except FileNotFoundError:
+                feature_cols = [col for col in train_df.columns if col.startswith('X')]
+                X_train = train_df[feature_cols].copy()
+
+            y_train = train_df['Y'].values
+
+            # Train XGBoost model
+            model = XGBClassifier(
+                n_estimators=150,
+                max_depth=6,
+                learning_rate=0.1,
+                subsample=0.8,
+                colsample_bytree=0.8,
+                random_state=42,
+                scale_pos_weight=10,
+                eval_metric='logloss'
+            )
+
+            print("Training XGBoost model...")
+            model.fit(X_train, y_train, verbose=0)
+
+            # Generate predictions
+            print("Generating predictions...")
+            y_pred_proba = model.predict_proba(X_test)[:, 1]
+            y_pred = (y_pred_proba >= threshold).astype(int)
+
+            # Create output DataFrame
+            predictions_df = pd.DataFrame({
+                'CoilID': coil_ids,
+                'Y': y_pred
+            })
+
+            # Save predictions
+            output_file = 'test_predictions.csv'
+            predictions_df.to_csv(output_file, index=False)
+
+            print(f"\n✓ Predictions saved to {output_file}")
+            print(f"  - Total predictions: {len(predictions_df)}")
+            print(f"  - Predicted defects: {(y_pred == 1).sum()}")
+            print(f"  - Predicted non-defects: {(y_pred == 0).sum()}")
+
+            # Display preview
+            print("\nPredictions Preview:")
+            print(predictions_df.head(10).to_string(index=False))
+
+            return output_file
+
+        except Exception as e:
+            print(f"✗ Error generating predictions: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return None
+
 if __name__ == "__main__":
     orchestrator = WorkflowOrchestrator()
     orchestrator.run_full_workflow()
+
+    # Generate test predictions
+    print("\n")
+    pred_file = orchestrator.generate_test_predictions()
