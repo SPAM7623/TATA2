@@ -1047,46 +1047,62 @@ KEY INSIGHTS FROM INDUSTRIAL EDA
         return self.insights
 
 if __name__ == "__main__":
-    import argparse
+    # Check if running in Jupyter/Colab (to avoid argparse conflict with Jupyter's -f parameter)
+    IS_JUPYTER = 'ipykernel' in sys.modules or 'IPython' in sys.modules
 
-    # Parse command line arguments
-    parser = argparse.ArgumentParser(
-        description='Part 1: Industrial EDA with File Upload Support'
-    )
-    parser.add_argument(
-        '--train',
-        type=str,
-        default='train.csv',
-        help='Path to training CSV file (default: train.csv)'
-    )
-    parser.add_argument(
-        '--test',
-        type=str,
-        default='test.csv',
-        help='Path to test CSV file (default: test.csv)'
-    )
-    parser.add_argument(
-        '--upload',
-        action='store_true',
-        help='Enable automatic file upload handling'
-    )
+    if not IS_JUPYTER:
+        # Only use argparse if running as standalone script
+        import argparse
 
-    args = parser.parse_args()
+        parser = argparse.ArgumentParser(
+            description='Part 1: Industrial EDA with File Upload Support'
+        )
+        parser.add_argument(
+            '--train',
+            type=str,
+            default='train.csv',
+            help='Path to training CSV file (default: train.csv)'
+        )
+        parser.add_argument(
+            '--test',
+            type=str,
+            default='test.csv',
+            help='Path to test CSV file (default: test.csv)'
+        )
+        parser.add_argument(
+            '--upload',
+            action='store_true',
+            help='Enable automatic file upload handling'
+        )
+
+        args = parser.parse_args()
+        train_arg = args.train
+        test_arg = args.test
+        upload_arg = args.upload
+    else:
+        # In Jupyter/Colab: use defaults (user can override in notebook before running)
+        train_arg = 'train.csv'
+        test_arg = 'test.csv'
+        upload_arg = True  # Enable auto-upload by default in Jupyter
 
     print("\n" + "="*70)
     print("PART 1: INDUSTRIAL EDA - WITH FILE UPLOAD SUPPORT")
     print("="*70)
 
-    print("\nUsage Examples:")
-    print("  1. Local files:      python part1_industrial_eda.py")
-    print("  2. Custom paths:     python part1_industrial_eda.py --train <path> --test <path>")
-    print("  3. Auto upload:      python part1_industrial_eda.py --upload")
+    if not IS_JUPYTER:
+        print("\nUsage Examples:")
+        print("  1. Local files:      python part1_industrial_eda.py")
+        print("  2. Custom paths:     python part1_industrial_eda.py --train <path> --test <path>")
+        print("  3. Auto upload:      python part1_industrial_eda.py --upload")
+    else:
+        print("\n✓ Running in Jupyter/Colab environment")
+        print("  Auto-upload enabled for file handling")
 
     try:
         eda = IndustrialEDA(
-            train_path=args.train,
-            test_path=args.test,
-            auto_upload=args.upload
+            train_path=train_arg,
+            test_path=test_arg,
+            auto_upload=upload_arg
         )
         insights = eda.run_complete_eda()
 
