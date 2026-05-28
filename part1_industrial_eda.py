@@ -30,15 +30,65 @@ warnings.filterwarnings('ignore')
 # FILE UPLOAD AND VALIDATION
 # =====================================================================
 
-def upload_and_validate_files(train_path='train.csv', test_path='test.csv'):
+def check_if_colab():
+    """Check if running in Google Colab"""
+    try:
+        from google.colab import files
+        return True
+    except ImportError:
+        return False
+
+def upload_files_colab():
+    """Upload files in Google Colab"""
+    print("\n" + "="*70)
+    print("GOOGLE COLAB FILE UPLOAD")
+    print("="*70)
+
+    from google.colab import files
+
+    print("\n📁 Click on 'Choose Files' button to upload train.csv")
+    uploaded_train = files.upload()
+
+    print("\n📁 Click on 'Choose Files' button to upload test.csv")
+    uploaded_test = files.upload()
+
+    # Get the uploaded file names
+    train_name = list(uploaded_train.keys())[0] if uploaded_train else None
+    test_name = list(uploaded_test.keys())[0] if uploaded_test else None
+
+    if not train_name or not test_name:
+        raise FileNotFoundError("Both train.csv and test.csv must be uploaded")
+
+    print(f"\n✓ Uploaded files:")
+    print(f"  - Train: {train_name}")
+    print(f"  - Test: {test_name}")
+
+    return train_name, test_name
+
+def upload_and_validate_files(train_path='train.csv', test_path='test.csv', use_colab=None):
     """
     Upload and validate training and test data files
-    Handles both local files and uploaded files
+    Handles local files, Colab uploads, and custom paths
     """
     print("\n" + "="*70)
     print("FILE UPLOAD & VALIDATION")
     print("="*70)
 
+    # Auto-detect Colab if not specified
+    if use_colab is None:
+        use_colab = check_if_colab()
+
+    # If in Colab, offer file upload
+    if use_colab:
+        print("\n✓ Running in Google Colab - Using Colab file upload")
+        try:
+            train_path, test_path = upload_files_colab()
+            return train_path, test_path
+        except Exception as e:
+            print(f"\n⚠ Colab upload failed: {e}")
+            print("Continuing with local file check...")
+
+    # Check for local files
     files_found = {
         'train': os.path.exists(train_path),
         'test': os.path.exists(test_path)
@@ -54,38 +104,26 @@ def upload_and_validate_files(train_path='train.csv', test_path='test.csv'):
         return train_path, test_path
 
     # If files don't exist, guide user through upload
-    print("\n⚠ Files not found. Follow these steps:")
-    print("\nOPTION 1: Upload Files to This Directory")
+    print("\n⚠ Files not found. Upload options:")
+
+    print("\n📌 OPTION 1: Google Colab (Recommended for Colab)")
+    print("""
+    from google.colab import files
+
+    print("Upload train.csv:")
+    uploaded = files.upload()
+
+    print("Upload test.csv:")
+    uploaded = files.upload()
+    """)
+
+    print("\n📌 OPTION 2: Local Files (Linux/Mac/Windows)")
     print("  1. Place 'train.csv' in current directory")
     print("  2. Place 'test.csv' in current directory")
     print("  3. Run this script again")
 
-    print("\nOPTION 2: Specify Custom File Paths")
+    print("\n📌 OPTION 3: Custom File Paths")
     print("  python part1_industrial_eda.py --train <path> --test <path>")
-
-    print("\nOPTION 3: Use File Selection Dialog")
-    print("  Uncomment the file dialog code below:")
-    print("""
-    from tkinter import filedialog
-    import tkinter as tk
-
-    root = tk.Tk()
-    root.withdraw()
-
-    print("Select train.csv file:")
-    train_path = filedialog.askopenfilename(
-        title="Select Training Data",
-        filetypes=[("CSV files", "*.csv"), ("All files", "*.*")]
-    )
-
-    print("Select test.csv file:")
-    test_path = filedialog.askopenfilename(
-        title="Select Test Data",
-        filetypes=[("CSV files", "*.csv"), ("All files", "*.*")]
-    )
-
-    root.destroy()
-    """)
 
     # Check for command line arguments
     if len(sys.argv) > 1:
@@ -110,7 +148,7 @@ def upload_and_validate_files(train_path='train.csv', test_path='test.csv'):
         f"\n✗ Required files not found:\n"
         f"  - train.csv (expected: {train_path})\n"
         f"  - test.csv (expected: {test_path})\n\n"
-        f"Please upload files and try again."
+        f"Please upload files using one of the options above."
     )
 
 def validate_data_files(train_path, test_path):
