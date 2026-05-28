@@ -21,8 +21,172 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from sklearn.ensemble import IsolationForest
+import os
+import sys
 import warnings
 warnings.filterwarnings('ignore')
+
+# =====================================================================
+# FILE UPLOAD AND VALIDATION
+# =====================================================================
+
+def upload_and_validate_files(train_path='train.csv', test_path='test.csv'):
+    """
+    Upload and validate training and test data files
+    Handles both local files and uploaded files
+    """
+    print("\n" + "="*70)
+    print("FILE UPLOAD & VALIDATION")
+    print("="*70)
+
+    files_found = {
+        'train': os.path.exists(train_path),
+        'test': os.path.exists(test_path)
+    }
+
+    print(f"\nLocal file check:")
+    print(f"  ✓ train.csv exists: {files_found['train']}")
+    print(f"  ✓ test.csv exists: {files_found['test']}")
+
+    # If files exist, validate them
+    if files_found['train'] and files_found['test']:
+        print("\n✓ Using local files")
+        return train_path, test_path
+
+    # If files don't exist, guide user through upload
+    print("\n⚠ Files not found. Follow these steps:")
+    print("\nOPTION 1: Upload Files to This Directory")
+    print("  1. Place 'train.csv' in current directory")
+    print("  2. Place 'test.csv' in current directory")
+    print("  3. Run this script again")
+
+    print("\nOPTION 2: Specify Custom File Paths")
+    print("  python part1_industrial_eda.py --train <path> --test <path>")
+
+    print("\nOPTION 3: Use File Selection Dialog")
+    print("  Uncomment the file dialog code below:")
+    print("""
+    from tkinter import filedialog
+    import tkinter as tk
+
+    root = tk.Tk()
+    root.withdraw()
+
+    print("Select train.csv file:")
+    train_path = filedialog.askopenfilename(
+        title="Select Training Data",
+        filetypes=[("CSV files", "*.csv"), ("All files", "*.*")]
+    )
+
+    print("Select test.csv file:")
+    test_path = filedialog.askopenfilename(
+        title="Select Test Data",
+        filetypes=[("CSV files", "*.csv"), ("All files", "*.*")]
+    )
+
+    root.destroy()
+    """)
+
+    # Check for command line arguments
+    if len(sys.argv) > 1:
+        if '--train' in sys.argv:
+            train_idx = sys.argv.index('--train')
+            if train_idx + 1 < len(sys.argv):
+                train_path = sys.argv[train_idx + 1]
+                print(f"\n✓ Using custom train path: {train_path}")
+
+        if '--test' in sys.argv:
+            test_idx = sys.argv.index('--test')
+            if test_idx + 1 < len(sys.argv):
+                test_path = sys.argv[test_idx + 1]
+                print(f"✓ Using custom test path: {test_path}")
+
+        # Validate custom paths
+        if os.path.exists(train_path) and os.path.exists(test_path):
+            return train_path, test_path
+
+    # If still not found, raise error
+    raise FileNotFoundError(
+        f"\n✗ Required files not found:\n"
+        f"  - train.csv (expected: {train_path})\n"
+        f"  - test.csv (expected: {test_path})\n\n"
+        f"Please upload files and try again."
+    )
+
+def validate_data_files(train_path, test_path):
+    """
+    Validate that uploaded files have correct structure
+    """
+    print("\n" + "="*70)
+    print("DATA VALIDATION")
+    print("="*70)
+
+    try:
+        print("\nReading training data...")
+        train_df = pd.read_csv(train_path)
+        print(f"  ✓ Shape: {train_df.shape}")
+        print(f"  ✓ Columns: {list(train_df.columns[:5])} ...")
+
+        # Validate training data
+        required_cols = {'CoilID', 'Y'}
+        feature_cols = {f'X{i}' for i in range(1, 50)}
+        expected_cols = required_cols | feature_cols
+
+        missing_cols = expected_cols - set(train_df.columns)
+        if missing_cols:
+            print(f"\n⚠ Warning: Expected columns not found: {missing_cols}")
+        else:
+            print(f"  ✓ All expected columns present")
+
+        # Validate target
+        if 'Y' in train_df.columns:
+            y_values = train_df['Y'].unique()
+            print(f"  ✓ Target values: {sorted(y_values)}")
+            print(f"  ✓ Class distribution: {train_df['Y'].value_counts().to_dict()}")
+        else:
+            raise ValueError("Training data missing 'Y' (target) column")
+
+        print("\nReading test data...")
+        test_df = pd.read_csv(test_path)
+        print(f"  ✓ Shape: {test_df.shape}")
+
+        if 'Y' in test_df.columns:
+            print("  ⚠ Warning: Test data contains Y column (will be ignored)")
+
+        print("\n✓ Data validation successful!")
+        return train_df, test_df
+
+    except Exception as e:
+        raise ValueError(f"Data validation failed: {str(e)}")
+
+def copy_files_to_workflow(train_path, test_path):
+    """
+    Copy uploaded files to standardized locations for workflow
+    """
+    print("\n" + "="*70)
+    print("PREPARING FILES FOR WORKFLOW")
+    print("="*70)
+
+    # If files are not in current directory, copy them
+    if train_path != 'train.csv' or test_path != 'test.csv':
+        try:
+            print("\nCopying files to workflow directory...")
+            train_df = pd.read_csv(train_path)
+            test_df = pd.read_csv(test_path)
+
+            train_df.to_csv('train.csv', index=False)
+            test_df.to_csv('test.csv', index=False)
+
+            print("  ✓ train.csv copied")
+            print("  ✓ test.csv copied")
+
+            return 'train.csv', 'test.csv'
+        except Exception as e:
+            print(f"⚠ Could not copy files: {e}")
+            return train_path, test_path
+    else:
+        print("  ✓ Files already in workflow directory")
+        return train_path, test_path
 
 # =====================================================================
 # PART 1 CHECKLIST
@@ -50,12 +214,40 @@ CHECKLIST = {
 class IndustrialEDA:
     """Comprehensive EDA for Alpha defect prediction"""
 
-    def __init__(self, train_path='train.csv', test_path='test.csv'):
+    def __init__(self, train_path='train.csv', test_path='test.csv', auto_upload=True):
+        """
+        Initialize EDA with file upload handling
+
+        Parameters:
+        -----------
+        train_path : str
+            Path to training CSV file
+        test_path : str
+            Path to test CSV file
+        auto_upload : bool
+            If True, automatically handle file uploads
+        """
         self.train_path = train_path
         self.test_path = test_path
         self.train_df = None
         self.test_df = None
         self.insights = {}
+
+        # Handle file upload if auto_upload is enabled
+        if auto_upload:
+            try:
+                self.train_path, self.test_path = upload_and_validate_files(
+                    train_path, test_path
+                )
+                self.train_df, self.test_df = validate_data_files(
+                    self.train_path, self.test_path
+                )
+                self.train_path, self.test_path = copy_files_to_workflow(
+                    self.train_path, self.test_path
+                )
+            except FileNotFoundError as e:
+                print(str(e))
+                print("\n✓ Skipping file upload (files will be required for analysis)")
 
     def load_data(self):
         """1.1: Load training and test data"""
@@ -63,8 +255,12 @@ class IndustrialEDA:
         print("1.1 DATA LOADING")
         print("="*70)
 
-        self.train_df = pd.read_csv(self.train_path)
-        self.test_df = pd.read_csv(self.test_path)
+        if self.train_df is None or self.test_df is None:
+            print("\nLoading files from disk...")
+            self.train_df = pd.read_csv(self.train_path)
+            self.test_df = pd.read_csv(self.test_path)
+        else:
+            print("✓ Files already loaded in memory")
 
         print(f"Train shape: {self.train_df.shape}")
         print(f"Test shape: {self.test_df.shape}")
@@ -813,18 +1009,62 @@ KEY INSIGHTS FROM INDUSTRIAL EDA
         return self.insights
 
 if __name__ == "__main__":
-    from insights_manager import InsightsManager
+    import argparse
 
-    eda = IndustrialEDA(train_path='train.csv', test_path='test.csv')
-    insights = eda.run_complete_eda()
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(
+        description='Part 1: Industrial EDA with File Upload Support'
+    )
+    parser.add_argument(
+        '--train',
+        type=str,
+        default='train.csv',
+        help='Path to training CSV file (default: train.csv)'
+    )
+    parser.add_argument(
+        '--test',
+        type=str,
+        default='test.csv',
+        help='Path to test CSV file (default: test.csv)'
+    )
+    parser.add_argument(
+        '--upload',
+        action='store_true',
+        help='Enable automatic file upload handling'
+    )
 
-    # Save insights for downstream parts
-    manager = InsightsManager()
-    manager.set_part1_insights(insights)
+    args = parser.parse_args()
 
     print("\n" + "="*70)
-    print("PART 1 COMPLETE")
+    print("PART 1: INDUSTRIAL EDA - WITH FILE UPLOAD SUPPORT")
     print("="*70)
-    print("\nKey insights extracted and saved.")
-    print("✓ Insights propagated to downstream parts")
-    print("Ready for Part 2: Baseline Model Training")
+
+    print("\nUsage Examples:")
+    print("  1. Local files:      python part1_industrial_eda.py")
+    print("  2. Custom paths:     python part1_industrial_eda.py --train <path> --test <path>")
+    print("  3. Auto upload:      python part1_industrial_eda.py --upload")
+
+    try:
+        eda = IndustrialEDA(
+            train_path=args.train,
+            test_path=args.test,
+            auto_upload=args.upload
+        )
+        insights = eda.run_complete_eda()
+
+        # Save insights for downstream parts
+        from insights_manager import InsightsManager
+        manager = InsightsManager()
+        manager.set_part1_insights(insights)
+
+        print("\n" + "="*70)
+        print("PART 1 COMPLETE")
+        print("="*70)
+        print("\nKey insights extracted and saved.")
+        print("✓ Insights propagated to downstream parts")
+        print("Ready for Part 2: Baseline Model Training")
+
+    except Exception as e:
+        print(f"\n✗ Error: {str(e)}")
+        print("\nPlease ensure train.csv and test.csv are in the current directory")
+        sys.exit(1)
