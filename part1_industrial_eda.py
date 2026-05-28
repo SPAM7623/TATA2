@@ -304,6 +304,17 @@ class IndustrialEDA:
         print(f"Test shape: {self.test_df.shape}")
         print(f"\nColumns: {list(self.train_df.columns)}")
 
+        # Check for NaN values
+        train_nan = self.train_df.isna().sum().sum()
+        test_nan = self.test_df.isna().sum().sum()
+        if train_nan > 0 or test_nan > 0:
+            print(f"\n⚠ Missing Values Detected:")
+            print(f"  Train: {train_nan} NaN values")
+            print(f"  Test: {test_nan} NaN values")
+            print(f"  → NaN handling will be applied during analysis steps")
+        else:
+            print(f"\n✓ No missing values detected")
+
         CHECKLIST["1.1_data_loading"] = True
         return self.train_df, self.test_df
 
@@ -506,6 +517,16 @@ class IndustrialEDA:
         X = self.train_df.drop(['CoilID', 'Y'], axis=1)
         y = self.train_df['Y']
 
+        # Handle NaN values
+        nan_count = X.isna().sum().sum()
+        if nan_count > 0:
+            print(f"\n⚠ Data contains {nan_count} NaN values")
+            print("  Dropping rows with missing values...")
+            valid_idx = ~X.isna().any(axis=1)
+            X = X[valid_idx]
+            y = y[valid_idx]
+            print(f"  ✓ Rows after NaN removal: {len(X)}")
+
         # Use Isolation Forest
         iso_forest = IsolationForest(contamination=0.05, random_state=42)
         outlier_scores = iso_forest.fit_predict(X)
@@ -650,6 +671,15 @@ class IndustrialEDA:
         X = self.train_df.drop(['CoilID', 'Y'], axis=1).iloc[:1000]  # Sample for speed
         y = self.train_df['Y'].iloc[:1000]
 
+        # Handle NaN values
+        nan_count = X.isna().sum().sum()
+        if nan_count > 0:
+            print(f"\n⚠ Data contains {nan_count} NaN values")
+            print("  Dropping rows with missing values...")
+            X = X.dropna()
+            y = y[X.index]
+            print(f"  ✓ Rows after NaN removal: {len(X)}")
+
         from sklearn.preprocessing import StandardScaler
         X_scaled = StandardScaler().fit_transform(X)
 
@@ -681,6 +711,15 @@ class IndustrialEDA:
 
         X = self.train_df.drop(['CoilID', 'Y'], axis=1)
         y = self.train_df['Y']
+
+        # Handle NaN values
+        nan_count = X.isna().sum().sum()
+        if nan_count > 0:
+            print(f"\n⚠ Data contains {nan_count} NaN values")
+            print("  Dropping rows with missing values...")
+            X = X.dropna()
+            y = y[X.index]
+            print(f"  ✓ Rows after NaN removal: {len(X)}")
 
         # Standardize
         scaler = StandardScaler()
@@ -734,6 +773,15 @@ class IndustrialEDA:
         X = self.train_df.drop(['CoilID', 'Y'], axis=1)
         y = self.train_df['Y']
 
+        # Handle NaN values
+        nan_count = X.isna().sum().sum()
+        if nan_count > 0:
+            print(f"\n⚠ Data contains {nan_count} NaN values")
+            print("  Dropping rows with missing values...")
+            X = X.dropna()
+            y = y[X.index]
+            print(f"  ✓ Rows after NaN removal: {len(X)}")
+
         scaler = StandardScaler()
         X_scaled = scaler.fit_transform(X)
 
@@ -779,6 +827,15 @@ class IndustrialEDA:
 
         X = self.train_df.drop(['CoilID', 'Y'], axis=1).iloc[:500]  # Sample for speed
         y = self.train_df['Y'].iloc[:500]
+
+        # Handle NaN values
+        nan_count = X.isna().sum().sum()
+        if nan_count > 0:
+            print(f"\n⚠ Data contains {nan_count} NaN values")
+            print("  Dropping rows with missing values...")
+            X = X.dropna()
+            y = y[X.index]
+            print(f"  ✓ Rows after NaN removal: {len(X)}")
 
         scaler = StandardScaler()
         X_scaled = scaler.fit_transform(X)
