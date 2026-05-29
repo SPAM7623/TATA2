@@ -1,9 +1,10 @@
-"""Exploratory data analysis.
+"""Step 1 — Exploratory Data Analysis.
 
-Prints the handful of facts that actually shaped the modelling decisions:
-the class imbalance, how much data is missing, and how wildly the feature
-scales differ. Run it first to understand why the pipeline looks the way it
-does.
+Prints the facts that shape every later decision: the class imbalance, how much
+data is missing, and how wildly the feature scales differ. Nothing here is
+saved; it is a read-only look at the data.
+
+Run:  python 01_eda.py
 """
 
 import pandas as pd
@@ -17,7 +18,7 @@ def main() -> None:
     features = data.feature_columns(train)
 
     print("=" * 60)
-    print("DATASET OVERVIEW")
+    print("STEP 1 | EXPLORATORY DATA ANALYSIS")
     print("=" * 60)
     print(f"Train: {train.shape[0]} coils x {len(features)} features")
     print(f"Test : {test.shape[0]} coils x {len(features)} features")
@@ -33,21 +34,19 @@ def main() -> None:
     print("\nMissing values:")
     print(f"  train: {int(train[features].isna().sum().sum())} cells")
     print(f"  test : {int(test[features].isna().sum().sum())} cells")
-    cols_with_na = train[features].isna().sum()
-    cols_with_na = cols_with_na[cols_with_na > 0]
-    print(f"  affected feature columns: {len(cols_with_na)}")
+    affected = train[features].isna().sum()
+    print(f"  affected columns: {int((affected > 0).sum())}")
 
     print("\nFeature scale (median absolute value, top 5 by spread):")
     spread = train[features].abs().median().sort_values(ascending=False)
     for name, value in spread.head().items():
         print(f"  {name:>4}: {value:,.1f}")
-    print("  -> scales vary by orders of magnitude; tree models handle this,")
-    print("     so no scaling is required.")
 
-    print("\nTakeaways that drive the pipeline:")
-    print("  * Few positives  -> guard hard against overfitting")
-    print("  * Missing values -> median imputation (fit on train folds only)")
+    print("\nDesign takeaways:")
+    print("  * Few positives    -> guard against overfitting (shallow, regularised)")
+    print("  * Missing values   -> median imputation, fit on train folds only")
     print("  * Strong imbalance -> scale_pos_weight in the model")
+    print("  * Wild scales      -> no scaling needed (tree model)")
 
 
 if __name__ == "__main__":

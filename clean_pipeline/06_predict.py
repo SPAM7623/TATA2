@@ -1,8 +1,10 @@
-"""Turn the saved test probabilities into a submission file.
+"""Step 6 — Generate the submission.
 
-`train.py` already produced the averaged test probabilities, so scoring at a
-new threshold is instant - no retraining. Pass `--threshold` to pick your
-operating point; the default comes from `config`.
+Step 5 already cached the averaged test probabilities, so scoring at a new
+threshold is instant - no retraining. Pass `--threshold` to choose the
+operating point; the default comes from `src/config.py`.
+
+Run:  python 06_predict.py --threshold 0.00583
 """
 
 import argparse
@@ -23,7 +25,7 @@ def main() -> None:
     args = parser.parse_args()
 
     if not config.TEST_PROBA_CSV.exists():
-        raise SystemExit("Run train.py first - test probabilities are missing.")
+        raise SystemExit("Run 05_train_5seed_ensemble.py first - probabilities missing.")
 
     proba = pd.read_csv(config.TEST_PROBA_CSV)
     labels = (proba["proba"] >= args.threshold).astype(int)
@@ -35,6 +37,9 @@ def main() -> None:
 
     n_defects = int(labels.sum())
     total = len(labels)
+    print("=" * 60)
+    print("STEP 6 | PREDICT")
+    print("=" * 60)
     print(f"Threshold {args.threshold}")
     print(f"  defects flagged: {n_defects} ({100 * n_defects / total:.1f}%)")
     print(f"  clean          : {total - n_defects} ({100 * (total - n_defects) / total:.1f}%)")

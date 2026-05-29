@@ -19,16 +19,22 @@ modelling choice here is checked with cross-validation rather than assumed.
 
 ## Layout
 
+The pipeline is a numbered sequence — run the steps in order, 01 → 06. They
+share a small library in `src/`.
+
 ```
 clean_pipeline/
 ├── src/
-│   ├── config.py       paths, hyperparameters, random seeds
-│   ├── data.py         loading + median imputation
-│   ├── model.py        the validated XGBoost configuration
-│   └── evaluation.py   cross-validation + metrics
-├── eda.py              print a data summary
-├── train.py           cross-validate and fit the 5-seed ensemble
-└── predict.py         score the test set -> submission.csv
+│   ├── config.py              paths, hyperparameters, random seeds
+│   ├── data.py                loading + median imputation
+│   ├── model.py               the validated XGBoost configuration
+│   └── evaluation.py          cross-validation + metrics
+├── 01_eda.py                  explore the data
+├── 02_preprocessing.py        leakage-free median imputation check
+├── 03_baseline_model.py       single-seed XGBoost, out-of-fold metrics
+├── 04_model_comparison.py     XGB vs alternatives (why XGB wins)
+├── 05_train_5seed_ensemble.py final ensemble: CV + fit + cache probs
+└── 06_predict.py              score the test set -> submission.csv
 ```
 
 ## How the final model was chosen
@@ -49,12 +55,17 @@ recalibration (it improved Brier score but hurt ranking).
 
 ## Usage
 
+Run from inside `clean_pipeline/`, with `train.csv` and `test.csv` in the
+repository root. The steps are meant to be run in order:
+
 ```bash
-python eda.py                          # data summary
-python train.py                        # cross-validate + fit ensemble
-python predict.py                      # submission.csv at default threshold
-python predict.py --threshold 0.0068   # or choose your own operating point
+python 01_eda.py                          # data summary
+python 02_preprocessing.py                # imputation check
+python 03_baseline_model.py               # single-seed OOF metrics
+python 04_model_comparison.py             # XGB vs alternatives
+python 05_train_5seed_ensemble.py         # CV + fit + cache probabilities
+python 06_predict.py --threshold 0.00583  # submission.csv at your threshold
 ```
 
-Run the scripts from inside `clean_pipeline/`, with `train.csv` and `test.csv`
-in the repository root.
+Only steps 05 and 06 are required to produce a submission; 01–04 document and
+justify the choices behind it.
