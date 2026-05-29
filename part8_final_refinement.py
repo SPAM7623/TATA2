@@ -370,13 +370,19 @@ class FinalRefinement:
         best_params = self.insights['best_params']
         pos_weight = sum(self.y == 0) / sum(self.y == 1)
 
-        # Train final model on full dataset
+        # Train final model on full dataset.
+        # Regularization params (reg_alpha/reg_lambda/min_child_weight) validated
+        # via 5-fold OOF CV to reduce overfitting on the 66-positive imbalanced
+        # dataset (AUC 0.8655 vs 0.8641 baseline). See OPTIMIZATION_FINDINGS.md.
         self.final_model = XGBClassifier(
             n_estimators=best_params['n_estimators'],
             max_depth=best_params['max_depth'],
             learning_rate=best_params['learning_rate'],
-            subsample=0.8,
-            colsample_bytree=0.8,
+            subsample=0.7,
+            colsample_bytree=0.7,
+            reg_alpha=0.5,
+            reg_lambda=2.0,
+            min_child_weight=3,
             scale_pos_weight=pos_weight,
             random_state=42,
             verbosity=0,
