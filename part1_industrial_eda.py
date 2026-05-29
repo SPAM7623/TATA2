@@ -517,20 +517,20 @@ class IndustrialEDA:
         X = self.train_df.drop(['CoilID', 'Y'], axis=1)
         y = self.train_df['Y']
 
-        # Handle NaN values
+        # Handle NaN values with median imputation (leakage-free approach)
         nan_count = X.isna().sum().sum()
         if nan_count > 0:
             print(f"\n⚠ Data contains {nan_count} NaN values")
-            print("  Dropping rows with missing values...")
-            valid_idx = ~X.isna().any(axis=1)
-            X = X[valid_idx]
-            y = y[valid_idx]
-            print(f"  ✓ Rows after NaN removal: {len(X)}")
+            print("  Applying median imputation...")
+            X_imputed = X.fillna(X.median())
+            print(f"  ✓ NaN values imputed using column medians")
+        else:
+            X_imputed = X.copy()
 
         # Use Isolation Forest
         iso_forest = IsolationForest(contamination=0.05, random_state=42)
-        outlier_scores = iso_forest.fit_predict(X)
-        outlier_probs = -iso_forest.score_samples(X)  # Negative scores -> positive anomaly scores
+        outlier_scores = iso_forest.fit_predict(X_imputed)
+        outlier_probs = -iso_forest.score_samples(X_imputed)  # Negative scores -> positive anomaly scores
 
         self.train_df['outlier_score'] = outlier_probs
 
@@ -671,14 +671,13 @@ class IndustrialEDA:
         X = self.train_df.drop(['CoilID', 'Y'], axis=1).iloc[:1000]  # Sample for speed
         y = self.train_df['Y'].iloc[:1000]
 
-        # Handle NaN values
+        # Handle NaN values with median imputation
         nan_count = X.isna().sum().sum()
         if nan_count > 0:
             print(f"\n⚠ Data contains {nan_count} NaN values")
-            print("  Dropping rows with missing values...")
-            X = X.dropna()
-            y = y[X.index]
-            print(f"  ✓ Rows after NaN removal: {len(X)}")
+            print("  Applying median imputation...")
+            X = X.fillna(X.median())
+            print(f"  ✓ NaN values imputed using column medians")
 
         from sklearn.preprocessing import StandardScaler
         X_scaled = StandardScaler().fit_transform(X)
@@ -712,14 +711,13 @@ class IndustrialEDA:
         X = self.train_df.drop(['CoilID', 'Y'], axis=1)
         y = self.train_df['Y']
 
-        # Handle NaN values
+        # Handle NaN values with median imputation
         nan_count = X.isna().sum().sum()
         if nan_count > 0:
             print(f"\n⚠ Data contains {nan_count} NaN values")
-            print("  Dropping rows with missing values...")
-            X = X.dropna()
-            y = y[X.index]
-            print(f"  ✓ Rows after NaN removal: {len(X)}")
+            print("  Applying median imputation...")
+            X = X.fillna(X.median())
+            print(f"  ✓ NaN values imputed using column medians")
 
         # Standardize
         scaler = StandardScaler()
@@ -773,14 +771,13 @@ class IndustrialEDA:
         X = self.train_df.drop(['CoilID', 'Y'], axis=1)
         y = self.train_df['Y']
 
-        # Handle NaN values
+        # Handle NaN values with median imputation
         nan_count = X.isna().sum().sum()
         if nan_count > 0:
             print(f"\n⚠ Data contains {nan_count} NaN values")
-            print("  Dropping rows with missing values...")
-            X = X.dropna()
-            y = y[X.index]
-            print(f"  ✓ Rows after NaN removal: {len(X)}")
+            print("  Applying median imputation...")
+            X = X.fillna(X.median())
+            print(f"  ✓ NaN values imputed using column medians")
 
         scaler = StandardScaler()
         X_scaled = scaler.fit_transform(X)
@@ -828,14 +825,13 @@ class IndustrialEDA:
         X = self.train_df.drop(['CoilID', 'Y'], axis=1).iloc[:500]  # Sample for speed
         y = self.train_df['Y'].iloc[:500]
 
-        # Handle NaN values
+        # Handle NaN values with median imputation
         nan_count = X.isna().sum().sum()
         if nan_count > 0:
             print(f"\n⚠ Data contains {nan_count} NaN values")
-            print("  Dropping rows with missing values...")
-            X = X.dropna()
-            y = y[X.index]
-            print(f"  ✓ Rows after NaN removal: {len(X)}")
+            print("  Applying median imputation...")
+            X = X.fillna(X.median())
+            print(f"  ✓ NaN values imputed using column medians")
 
         scaler = StandardScaler()
         X_scaled = scaler.fit_transform(X)
