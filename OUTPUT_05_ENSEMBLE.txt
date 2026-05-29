@@ -1,0 +1,22 @@
+============================================================
+STEP 5 | FINAL 5-SEED ENSEMBLE
+============================================================
+Seeds: [42, 123, 999, 2025, 7777]
+
+Out-of-fold metrics:
+  ROC-AUC           : 0.8668
+  PR-AUC            : 0.3055
+  best-F1 threshold : 0.5025  (F1 = 0.403)
+  recall / precision: 0.455 / 0.361
+
+Fitting on all training data...
+  trained seed 42
+  trained seed 123
+  trained seed 999
+  trained seed 2025
+  trained seed 7777
+
+Saved out-of-fold predictions -> oof_predictions.csv
+Saved test probabilities      -> test_probabilities.csv
+
+Next: python 06_predict.py --threshold <value>

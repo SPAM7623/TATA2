@@ -1,0 +1,137 @@
+======================================================================
+STEP 1 | COMPREHENSIVE EXPLORATORY DATA ANALYSIS
+======================================================================
+
+1. DATASET SHAPE
+======================================================================
+Train: 1352 coils × 49 features
+Test : 339 coils × 49 features
+
+2. MISSING VALUES & DUPLICATES
+======================================================================
+Train NaN cells: 249 (0.38%)
+Test NaN cells : 68
+Affected columns: 12
+Duplicate rows  : 0
+
+3. CLASS IMBALANCE
+======================================================================
+Non-defective (0): 1286 (95.1%)
+Defective     (1): 66 (4.9%)
+Imbalance ratio  : 19.5 : 1
+
+4. UNIVARIATE ANALYSIS (Feature Distributions)
+======================================================================
+Feature statistics (top 5 by variance):
+  X35: var=44428855331798.79, mean=9922451.14, std=6665497.38
+  X34: var=3133694.67, mean=2359.43, std=1770.22
+  X36: var=3123666.53, mean=2279.29, std=1767.39
+  X37: var=3031642.00, mean=1641.23, std=1741.16
+  X38: var=1596547.58, mean=690.50, std=1263.55
+
+5. OUTLIER ANALYSIS
+======================================================================
+Outliers detected: 68 (5.0%)
+  Defect samples  : 0.0% outliers
+  Normal samples  : 5.3% outliers
+  Ratio           : 0.00x more outliers in defects
+
+6. DEFECT vs NON-DEFECT COMPARISON
+======================================================================
+Top 10 features with largest mean differences:
+  X35: Δmean=8157728.192257
+  X36: Δmean=1997.943141
+  X34: Δmean=1969.240916
+  X37: Δmean=1386.286253
+  X38: Δmean=600.636222
+  X13: Δmean=466.165856
+  X22: Δmean=95.805332
+  X2: Δmean=61.156219
+  X19: Δmean=48.967223
+  X4: Δmean=36.982237
+
+7. VARIANCE/INSTABILITY ANALYSIS
+======================================================================
+Top 15 unstable features (high variance during defects):
+  X11: ratio=1.3384 (defect var / normal var)
+  X17: ratio=1.2259 (defect var / normal var)
+  X22: ratio=1.1549 (defect var / normal var)
+  X45: ratio=1.1029 (defect var / normal var)
+  X20: ratio=1.0905 (defect var / normal var)
+  X39: ratio=1.0535 (defect var / normal var)
+  X47: ratio=0.9426 (defect var / normal var)
+  X27: ratio=0.7858 (defect var / normal var)
+  X2: ratio=0.7810 (defect var / normal var)
+  X3: ratio=0.7489 (defect var / normal var)
+  X18: ratio=0.6921 (defect var / normal var)
+  X25: ratio=0.6554 (defect var / normal var)
+  X19: ratio=0.6492 (defect var / normal var)
+  X44: ratio=0.5951 (defect var / normal var)
+  X21: ratio=0.5927 (defect var / normal var)
+
+8. CORRELATION ANALYSIS
+======================================================================
+Top 10 feature correlations:
+  X31 - X30: 0.9681
+  X30 - X31: 0.9681
+  X31 - X32: 0.9567
+  X32 - X31: 0.9567
+  X10 - X13: 0.9511
+  X13 - X10: 0.9511
+  X32 - X33: 0.9481
+  X33 - X32: 0.9481
+  X30 - X32: 0.9467
+  X32 - X30: 0.9467
+
+9. FEATURE INTERACTION ANALYSIS
+======================================================================
+Top 10 pairwise interactions (by variance):
+  X12 × X15: 4.070878
+  X9 × X15: 3.076776
+  X8 × X15: 2.798450
+  X9 × X12: 2.198588
+  X10 × X15: 2.100098
+  X8 × X12: 1.961766
+  X1 × X12: 1.823506
+  X10 × X12: 1.767146
+  X13 × X15: 1.741517
+  X8 × X9: 1.640021
+
+10. FEATURE GROUPING (Hierarchical Clustering)
+======================================================================
+Hierarchical clustering computed (49 features)
+Distance metric: 1 - |correlation|
+
+11. DIMENSIONALITY REDUCTION (PCA)
+======================================================================
+PC1 explains: 32.55%
+PC2 explains: 9.33%
+Top 5 PCs explain: 58.58%
+Components for 90% variance: 21
+Components for 95% variance: 28
+
+12. FEATURE SCALE (Median Absolute Value)
+======================================================================
+Top 10 by scale:
+   X35: 13,940,342.0
+   X36: 3,559.5
+   X34: 3,487.0
+   X19: 1,281.4
+   X17: 1,158.7
+    X1: 1,072.0
+   X18: 890.0
+   X13: 842.1
+    X4: 725.0
+   X21: 679.0
+
+======================================================================
+DESIGN TAKEAWAYS & DECISIONS
+======================================================================
+✓ Few positives (66)        → Guard against overfitting
+✓ High imbalance (19.5:1)   → Use scale_pos_weight in model
+✓ Missing values (249)      → Apply median imputation (train fold only)
+✓ Wild scale variation      → No scaling needed (tree-based model)
+✓ Feature correlation       → Keep all features (tree model handles)
+✓ High dimensionality (49)  → Use regularisation (shallow trees)
+✓ Outliers in defects       → Model naturally learns outlier patterns
+✓ Instability in defects    → Core signal to learn from

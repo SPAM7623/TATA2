@@ -1,0 +1,12 @@
+============================================================
+STEP 3 | BASELINE (single-seed regularised XGBoost)
+============================================================
+
+5-fold out-of-fold metrics (seed 42):
+  ROC-AUC           : 0.8647
+  PR-AUC            : 0.3055
+  best-F1 threshold : 0.5025  (F1 = 0.395)
+  recall / precision: 0.455 / 0.349
+  MCC               : 0.363
+  balanced accuracy : 0.705
+  confusion (tp/fp/fn/tn): 30/56/36/1230

@@ -1,0 +1,7 @@
+============================================================
+STEP 6 | PREDICT
+============================================================
+Threshold 0.00583
+  defects flagged: 225 (66.4%)
+  clean          : 114 (33.6%)
+  written to     : /home/user/TATA2/clean_pipeline/artifacts/submission.csv

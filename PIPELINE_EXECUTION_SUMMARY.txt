@@ -1,0 +1,138 @@
+════════════════════════════════════════════════════════════════
+COMPLETE PIPELINE EXECUTION SUMMARY
+════════════════════════════════════════════════════════════════
+
+📊 STAGE 1: EXPLORATION & DATA UNDERSTANDING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+01_eda.py
+   Output: OUTPUT_01_EDA.txt
+======================================================================
+STEP 1 | COMPREHENSIVE EXPLORATORY DATA ANALYSIS
+======================================================================
+
+1. DATASET SHAPE
+======================================================================
+Train: 1352 coils × 49 features
+Test : 339 coils × 49 features
+
+2. MISSING VALUES & DUPLICATES
+======================================================================
+Train NaN cells: 249 (0.38%)
+Test NaN cells : 68
+Affected columns: 12
+Duplicate rows  : 0
+
+3. CLASS IMBALANCE
+======================================================================
+Non-defective (0): 1286 (95.1%)
+Defective     (1): 66 (4.9%)
+
+02_preprocessing.py
+   Output: OUTPUT_02_PREPROCESSING.txt
+============================================================
+STEP 2 | PREPROCESSING (leakage-free median imputation)
+============================================================
+Raw train missing cells: 249
+Raw test  missing cells: 68
+Imbalance weight (neg/pos): 19.48
+
+After imputation:
+  train NaNs: 0
+  test  NaNs: 0
+
+📊 STAGE 2: BASELINE & COMPARISON
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+03_baseline_model.py
+   Output: OUTPUT_03_BASELINE.txt
+============================================================
+STEP 3 | BASELINE (single-seed regularised XGBoost)
+============================================================
+
+5-fold out-of-fold metrics (seed 42):
+  ROC-AUC           : 0.8647
+  PR-AUC            : 0.3055
+  best-F1 threshold : 0.5025  (F1 = 0.395)
+  recall / precision: 0.455 / 0.349
+  MCC               : 0.363
+  balanced accuracy : 0.705
+  confusion (tp/fp/fn/tn): 30/56/36/1230
+
+04_model_comparison.py
+   Output: OUTPUT_04_COMPARISON.txt
+============================================================
+STEP 4 | MODEL COMPARISON (5-fold OOF)
+============================================================
+
+Model                         ROC-AUC   PR-AUC
+XGB regularised (chosen)       0.8647   0.3055
+XGB original (d6,150,lr.1)     0.8493   0.3293
+/usr/local/lib/python3.11/dist-packages/sklearn/utils/validation.py:2691: UserWarning: X does not have valid feature names, but LGBMClassifier was fitted with feature names
+  warnings.warn(
+/usr/local/lib/python3.11/dist-packages/sklearn/utils/validation.py:2691: UserWarning: X does not have valid feature names, but LGBMClassifier was fitted with feature names
+  warnings.warn(
+/usr/local/lib/python3.11/dist-packages/sklearn/utils/validation.py:2691: UserWarning: X does not have valid feature names, but LGBMClassifier was fitted with feature names
+  warnings.warn(
+/usr/local/lib/python3.11/dist-packages/sklearn/utils/validation.py:2691: UserWarning: X does not have valid feature names, but LGBMClassifier was fitted with feature names
+  warnings.warn(
+/usr/local/lib/python3.11/dist-packages/sklearn/utils/validation.py:2691: UserWarning: X does not have valid feature names, but LGBMClassifier was fitted with feature names
+  warnings.warn(
+LightGBM                       0.8545   0.2996
+
+Best by ROC-AUC: XGB regularised (chosen)
+Decision: regularised XGBoost is the base model for the ensemble.
+
+📊 STAGE 3: ENSEMBLE TRAINING & PREDICTIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+05_train_5seed_ensemble.py
+   Output: OUTPUT_05_ENSEMBLE.txt
+============================================================
+STEP 5 | FINAL 5-SEED ENSEMBLE
+============================================================
+Seeds: [42, 123, 999, 2025, 7777]
+
+Out-of-fold metrics:
+  ROC-AUC           : 0.8668
+  PR-AUC            : 0.3055
+  best-F1 threshold : 0.5025  (F1 = 0.403)
+  recall / precision: 0.455 / 0.361
+
+Fitting on all training data...
+  trained seed 42
+  trained seed 123
+  trained seed 999
+  trained seed 2025
+  trained seed 7777
+
+Saved out-of-fold predictions -> oof_predictions.csv
+Saved test probabilities      -> test_probabilities.csv
+
+Next: python 06_predict.py --threshold <value>
+
+06_predict.py (threshold 0.00583)
+   Output: OUTPUT_06_PREDICTIONS.txt
+============================================================
+STEP 6 | PREDICT
+============================================================
+Threshold 0.00583
+  defects flagged: 225 (66.4%)
+  clean          : 114 (33.6%)
+  written to     : /home/user/TATA2/clean_pipeline/artifacts/submission.csv
+
+════════════════════════════════════════════════════════════════
+✅ FINAL OUTPUT
+════════════════════════════════════════════════════════════════
+-rw-r--r-- 1 root root 2.2K May 29 15:37 clean_pipeline/artifacts/submission.csv
+
+CoilID,Y
+711,1
+1542,0
+1232,1
+600,0
+...
+1429,0
+934,1
+571,1
+1374,1
+14,1
+
+✅ Pipeline execution complete!

@@ -1,0 +1,14 @@
+============================================================
+STEP 2 | PREPROCESSING (leakage-free median imputation)
+============================================================
+Raw train missing cells: 249
+Raw test  missing cells: 68
+Imbalance weight (neg/pos): 19.48
+
+After imputation:
+  train NaNs: 0
+  test  NaNs: 0
+
+Contract: imputer.fit() sees training rows only; test rows are
+transformed with the training medians. Inside cross-validation the
+same rule is applied per fold (see src/evaluation.py).

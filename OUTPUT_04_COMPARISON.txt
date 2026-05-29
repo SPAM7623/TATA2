@@ -1,0 +1,21 @@
+============================================================
+STEP 4 | MODEL COMPARISON (5-fold OOF)
+============================================================
+
+Model                         ROC-AUC   PR-AUC
+XGB regularised (chosen)       0.8647   0.3055
+XGB original (d6,150,lr.1)     0.8493   0.3293
+/usr/local/lib/python3.11/dist-packages/sklearn/utils/validation.py:2691: UserWarning: X does not have valid feature names, but LGBMClassifier was fitted with feature names
+  warnings.warn(
+/usr/local/lib/python3.11/dist-packages/sklearn/utils/validation.py:2691: UserWarning: X does not have valid feature names, but LGBMClassifier was fitted with feature names
+  warnings.warn(
+/usr/local/lib/python3.11/dist-packages/sklearn/utils/validation.py:2691: UserWarning: X does not have valid feature names, but LGBMClassifier was fitted with feature names
+  warnings.warn(
+/usr/local/lib/python3.11/dist-packages/sklearn/utils/validation.py:2691: UserWarning: X does not have valid feature names, but LGBMClassifier was fitted with feature names
+  warnings.warn(
+/usr/local/lib/python3.11/dist-packages/sklearn/utils/validation.py:2691: UserWarning: X does not have valid feature names, but LGBMClassifier was fitted with feature names
+  warnings.warn(
+LightGBM                       0.8545   0.2996
+
+Best by ROC-AUC: XGB regularised (chosen)
+Decision: regularised XGBoost is the base model for the ensemble.
