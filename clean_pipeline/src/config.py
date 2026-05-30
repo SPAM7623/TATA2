@@ -30,6 +30,9 @@ CV_SEED = 42
 # run-to-run noise that a single seed shows on such a small positive class.
 ENSEMBLE_SEEDS = [42, 123, 999, 2025, 7777]
 
+# Ten seeds for extended ensemble testing.
+ENSEMBLE_SEEDS_10 = [42, 123, 999, 2025, 7777, 17, 29, 101, 314, 888]
+
 # --- Model hyperparameters -------------------------------------------------
 # Validated by cross-validation: shallow, strongly regularised trees gave the
 # best out-of-fold ranking without overfitting the 66 positive examples.
